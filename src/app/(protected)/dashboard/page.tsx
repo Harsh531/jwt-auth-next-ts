@@ -14,7 +14,9 @@ export default function DashboardPage() {
   const [data, setData] = useState<any>(null);
   const [loading, setLoading] = useState(false);
 
-
+  /**
+   * Fetch dashboard data
+   */
   useEffect(() => {
 
     const fetchDataUsingFetch = async () => {

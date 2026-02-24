@@ -39,6 +39,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setUser(null);
     };
 
+    /**
+     * Refresh the access token by generating a new refresh token and fetching a new access token using the new refresh token
+     */
     useEffect(() => {
         const refresh = async () => {
             try {
@@ -66,6 +69,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         refresh();
     }, [accessToken]);
 
+    /**
+     * Fetch user profile data
+     */
     useEffect(() => {
         const fetchUserData = async () => {
             try {
@@ -99,6 +105,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }, [accessToken]);
 
 
+    /**
+     * Axios Interceptors
+     */
     useEffect(() => {
         const requestInterceptor = api.interceptors.request.use(
             (config) => {
