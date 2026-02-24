@@ -38,7 +38,7 @@ export default function DashboardPage() {
         setData(result);
       } catch (error) {
         console.error(error);
-        router.push('/login');
+        // router.push('/login');
 
       } finally {
         setLoading(false);
@@ -48,6 +48,7 @@ export default function DashboardPage() {
     }
 
     const fetchData = async () => {
+
       setLoading(true);
       try {
         const res = await api.get("/api/dashboard");
@@ -61,7 +62,7 @@ export default function DashboardPage() {
         console.error(error);
         if (error instanceof AxiosError) {
           if (error.response?.status === 401) {
-            router.push('/login');
+            // router.push('/login');
           }
         }
       } finally {

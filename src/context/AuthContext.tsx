@@ -120,13 +120,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         )
 
         const responseInterceptor = api.interceptors.response.use(
-            (response) => (response),
+            (response) => response,
             async (error) => {
                 const originalRequest = error.config;
 
                 // if token expires
                 if (error.response.status === 401 && !originalRequest._retry) {
                     originalRequest._retry = true;
+
+
                     try {
                         const response = await fetch('/api/auth/refresh', {
                             method: "POST",
@@ -139,7 +141,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                         setAccessToken(data.accessToken);
 
                         // Retry original request
-                        originalRequest.headers.Authorization = `Bearer ${data.accessToken}`
+                        originalRequest.headers = {
+                            ...originalRequest.headers,
+                            Authorization: `bearer ${data.accessToken}`
+                        }
 
                         return api(originalRequest);
                     } catch (error) {
@@ -162,6 +167,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     console.log(isAuthenticated, "isAuthenticated")
     console.log(user, "user")
+    console.log(accessToken, "accessToken_", "\n", new Date().toLocaleTimeString())
 
     return (
         <AuthContext.Provider
