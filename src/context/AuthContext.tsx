@@ -1,6 +1,8 @@
 "use client";
 
 import { authFetch } from "@/lib/authFetch";
+import api from "@/lib/axios";
+import axios from "axios";
 import { useParams, usePathname, useRouter } from "next/navigation";
 import { createContext, useContext, useState, useEffect, ReactNode } from "react";
 
@@ -71,7 +73,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                     "/api/profile",
                     { method: "GET" },
                     accessToken,
-                    setAccessToken
+                    setAccessToken,
+                    logout
                 );
                 if (!res.ok) {
                     throw new Error("Failed to fetch");
@@ -93,7 +96,60 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         if (accessToken) {
             fetchUserData()
         }
-    }, [accessToken])
+    }, [accessToken]);
+
+
+    useEffect(() => {
+        const requestInterceptor = api.interceptors.request.use(
+            (config) => {
+                if (accessToken) {
+                    config.headers.Authorization = `Bearer ${accessToken}`
+                }
+                return config;
+            },
+            (error) => { return Promise.reject(error) }
+        )
+
+        const responseInterceptor = api.interceptors.response.use(
+            (response) => (response),
+            async (error) => {
+                const originalRequest = error.config;
+
+                // if token expires
+                if (error.response.status === 401 && !originalRequest._retry) {
+                    originalRequest._retry = true;
+                    try {
+                        const response = await fetch('/api/auth/refresh', {
+                            method: "POST",
+                            credentials: "include"
+                        });
+
+                        const data = await response.json();
+
+                        // Update React state directly
+                        setAccessToken(data.accessToken);
+
+                        // Retry original request
+                        originalRequest.headers.Authorization = `Bearer ${data.accessToken}`
+
+                        return api(originalRequest);
+                    } catch (error) {
+                        setAccessToken(null)
+                        return Promise.reject(error);
+                    }
+
+                }
+
+                return Promise.reject(error);
+            }
+        )
+
+        return () => {
+            api.interceptors.request.eject(requestInterceptor);
+            api.interceptors.response.eject(responseInterceptor);
+        }
+
+    }, [accessToken]);
 
     console.log(isAuthenticated, "isAuthenticated")
     console.log(user, "user")

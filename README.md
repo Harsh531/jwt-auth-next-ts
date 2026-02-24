@@ -183,7 +183,7 @@ Create `.env.local`:
 
     const { accessToken, setAccessToken } = useAuth();
 
-    const response = await authFetch("/api/protected/data", {}, accessToken, setAccessToken);
+    const response = await authFetch("/api/protected/data", {}, accessToken, setAccessToken, logout);
     const data = await response.json();
 
 ---

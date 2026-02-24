@@ -2,11 +2,13 @@
 
 import { useAuth } from "@/context/AuthContext";
 import { authFetch } from "@/lib/authFetch";
+import api from "@/lib/axios";
+import { AxiosError } from "axios";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
 export default function DashboardPage() {
-  const { accessToken, setAccessToken, isAuthenticated } = useAuth();
+  const { accessToken, setAccessToken, isAuthenticated, logout } = useAuth();
   const router = useRouter();
 
   const [data, setData] = useState<any>(null);
@@ -15,13 +17,14 @@ export default function DashboardPage() {
 
   useEffect(() => {
 
-    const fetchData = async () => {
+    const fetchDataUsingFetch = async () => {
       try {
         const res = await authFetch(
           "/api/dashboard",
           { method: "GET" },
           accessToken,
-          setAccessToken
+          setAccessToken,
+          logout
         );
 
 
@@ -42,10 +45,33 @@ export default function DashboardPage() {
 
     }
 
+    const fetchData = async () => {
+      setLoading(true);
+      try {
+        const res = await api.get("/api/dashboard");
+
+        if (res.status !== 200) {
+          throw new Error("Failed to fetch");
+        } else {
+          setData(res.data);
+        }
+      } catch (error) {
+        console.error(error);
+        if (error instanceof AxiosError) {
+          if (error.response?.status === 401) {
+            router.push('/login');
+          }
+        }
+      } finally {
+        setLoading(false);
+      }
+    }
+
     fetchData();
 
 
-  }, [isAuthenticated, router, accessToken, setAccessToken])
+  }, []);
+
 
 
   // useEffect(() => {
